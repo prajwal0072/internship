@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import joblib
@@ -31,6 +30,12 @@ fee = st.sidebar.number_input(
     value=10.0
 )
 
+execution_price = st.sidebar.number_input(
+    "Execution Price",
+    min_value=0.0,
+    value=100.0
+)
+
 sentiment = st.sidebar.selectbox(
     "Market Sentiment",
     ["Fear", "Extreme Fear", "Neutral", "Greed"]
@@ -45,6 +50,7 @@ if predict_button:
     input_df = pd.DataFrame({
         "Size USD": [size_usd],
         "Fee": [fee],
+        "Execution Price": [execution_price],
         "classification_encoded": [sentiment_encoded]
     })
 
@@ -58,9 +64,25 @@ if predict_button:
 
     with col1:
         if prediction == 1:
-            st.success("Profitable Trade")
+            st.success("✅ Profitable Trade")
+
+            st.markdown("""
+            ### Profitability Insights
+            - Positive market sentiment detected
+            - Balanced trade size
+            - Lower fee impact
+            - Better probability of profitability
+            """)
+
         else:
-            st.error("Non-Profitable Trade")
+            st.error("❌ Non-Profitable Trade")
+
+            st.markdown("""
+            ### Risk Insights
+            - Volatile market conditions
+            - Higher risk exposure
+            - Consider reducing trade size
+            """)
 
     with col2:
         st.metric(
@@ -75,7 +97,7 @@ if predict_button:
         "Importance": rf_model.feature_importances_
     })
 
-    fig1, ax1 = plt.subplots(figsize=(5,3))
+    fig1, ax1 = plt.subplots(figsize=(4,2.5))
 
     sns.barplot(
         x="Importance",
@@ -92,7 +114,7 @@ if predict_button:
 
     cluster_input = pd.DataFrame({
         "Size USD": [size_usd],
-        "Closed PnL": [100],
+        "Closed PnL": [500 if prediction == 1 else -200],
         "Fee": [fee]
     })
 
@@ -117,7 +139,7 @@ if predict_button:
         "Value": [1, 1, 1]
     })
 
-    fig2, ax2 = plt.subplots(figsize=(4,3))
+    fig2, ax2 = plt.subplots(figsize=(3.5,2.5))
 
     sns.barplot(
         x="Cluster",
@@ -134,14 +156,14 @@ if predict_button:
 
     st.markdown("""
     - Greed periods showed higher trading activity.
-    - Fear periods resulted in larger volatility.
+    - Fear periods resulted in higher volatility.
     - Large trade sizes produced larger PnL swings.
     """)
 
     st.subheader("🚀 Recommendations")
 
     st.markdown("""
-    - Reduce risk during Fear conditions.
-    - Increase trade activity cautiously during Greed periods.
-    - Avoid overtrading in volatile markets.
+    - Reduce leverage during Fear conditions.
+    - Increase trading selectively during Greed periods.
+    - Avoid overtrading during high volatility.
     """)
