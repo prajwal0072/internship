@@ -1,28 +1,33 @@
+
 import streamlit as st
 import pandas as pd
 import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.preprocessing import StandardScaler
 
-st.set_page_config(page_title="Trader Dashboard", layout="wide")
+st.set_page_config(
+    page_title="Trader Dashboard",
+    layout="wide"
+)
 
-rf_model = joblib.load("random_forest_model_2.pkl")
+rf_model = joblib.load("random_forest_model.pkl")
 encoder = joblib.load("label_encoder.pkl")
 kmeans_model = joblib.load("kmeans_model.pkl")
 scaler = joblib.load("scaler.pkl")
 
-st.title("Trader Performance Dashboard")
+st.title("📈 Trader Performance Dashboard")
 
 st.sidebar.header("Input Features")
 
 size_usd = st.sidebar.number_input(
     "Trade Size USD",
+    min_value=0.0,
     value=1000.0
 )
 
 fee = st.sidebar.number_input(
     "Fee",
+    min_value=0.0,
     value=10.0
 )
 
@@ -47,22 +52,30 @@ if predict_button:
 
     prediction_prob = rf_model.predict_proba(input_df)[0]
 
-    st.header("Random Forest Prediction")
+    st.subheader("🤖 Profitability Prediction")
 
-    if prediction == 1:
-        st.success("Profitable Trade")
-    else:
-        st.error("Non-Profitable Trade")
+    col1, col2 = st.columns(2)
 
-    st.write("Prediction Probability")
-    st.write(prediction_prob)
+    with col1:
+        if prediction == 1:
+            st.success("Profitable Trade")
+        else:
+            st.error("Non-Profitable Trade")
+
+    with col2:
+        st.metric(
+            "Confidence",
+            f"{max(prediction_prob)*100:.2f}%"
+        )
+
+    st.subheader("📊 Feature Importance")
 
     importance_df = pd.DataFrame({
         "Feature": input_df.columns,
         "Importance": rf_model.feature_importances_
     })
 
-    fig1, ax1 = plt.subplots(figsize=(8,5))
+    fig1, ax1 = plt.subplots(figsize=(5,3))
 
     sns.barplot(
         x="Importance",
@@ -71,9 +84,11 @@ if predict_button:
         ax=ax1
     )
 
+    plt.tight_layout()
+
     st.pyplot(fig1)
 
-    st.header("KMeans Trader Clustering")
+    st.subheader("🧠 Trader Clustering")
 
     cluster_input = pd.DataFrame({
         "Size USD": [size_usd],
@@ -91,20 +106,42 @@ if predict_button:
         2: "Moderate Trader"
     }
 
-    st.info(f"Cluster: {cluster_names[cluster]}")
+    st.info(f"Trader Type: {cluster_names[cluster]}")
 
-    fig2, ax2 = plt.subplots(figsize=(7,5))
-
-    cluster_data = pd.DataFrame({
-        "Cluster": ["Conservative", "Aggressive", "Moderate"],
+    cluster_df = pd.DataFrame({
+        "Cluster": [
+            "Conservative",
+            "Aggressive",
+            "Moderate"
+        ],
         "Value": [1, 1, 1]
     })
+
+    fig2, ax2 = plt.subplots(figsize=(4,3))
 
     sns.barplot(
         x="Cluster",
         y="Value",
-        data=cluster_data,
+        data=cluster_df,
         ax=ax2
     )
 
+    plt.tight_layout()
+
     st.pyplot(fig2)
+
+    st.subheader("📌 Key Insights")
+
+    st.markdown("""
+    - Greed periods showed higher trading activity.
+    - Fear periods resulted in larger volatility.
+    - Large trade sizes produced larger PnL swings.
+    """)
+
+    st.subheader("🚀 Recommendations")
+
+    st.markdown("""
+    - Reduce risk during Fear conditions.
+    - Increase trade activity cautiously during Greed periods.
+    - Avoid overtrading in volatile markets.
+    """)
