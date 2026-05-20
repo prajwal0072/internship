@@ -15,10 +15,6 @@ internship/
 │   ├── kmeans_model.pkl
 │   └── scaler.pkl
 │
-└── screenshots/
-    ├── dashboard.png
-    ├── profitable_trade.png
-    └── clustering.png
 
 
 # 📈 AI-Powered Trader Sentiment Analysis Dashboard
